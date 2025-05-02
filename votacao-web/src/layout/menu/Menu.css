@@ -1,0 +1,17 @@
+
+@media (min-height: 670px) {
+
+  .info {
+    position: absolute;
+    bottom: 10px;
+  }
+
+}
+
+@media (max-height: 669px) {
+
+  .info {
+    position: relative;
+  }
+
+}
