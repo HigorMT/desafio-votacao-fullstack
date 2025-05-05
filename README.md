@@ -84,3 +84,16 @@ Exemplos de retorno do serviço
 
 
 # desafio-votacao
+
+
+# Considerações do projeto
+
+Alguns detalhes da arquitetura do projeto se encontram na página de "Home" da aplicação.
+
+# Back-end
+ - executar a sessão "database" do arquivo "V001__V1_CREATE_TABLES.sql", somente a parte que está comentada, banco utilizado para esse projeto foi o PostgreSql.
+ - Todas as tabelas são criadas de forma automatica pelo gerenciador de versionamento do banco (Flyway)
+
+#Front-end
+ - executar comando "yarn install" ou "npm install" para instalação das dependências do projeto.
+ - Versão do node utilizada "20.4.0"
