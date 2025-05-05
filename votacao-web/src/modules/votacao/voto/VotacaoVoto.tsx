@@ -1,7 +1,7 @@
 import {ContainerLayout} from '../../../layout/ContainerLayout';
-import {Button, CircularProgress, Grid, TextField} from '@mui/material';
+import {Button, CircularProgress, Grid, IconButton, InputAdornment, TextField, Typography} from '@mui/material';
 import {DefaultCard} from '../../../componentes/DefaultCard';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {Votacao} from '../../../model/Votacao';
 import {VotacaoApi} from '../../../services/votacao-api';
@@ -16,25 +16,34 @@ import {CooperadoApi} from '../../../services/cooperado-api';
 import {ValidacaoCooperadoVoto} from '../../../model/ValidacaoCooperadoVoto';
 import {Routes} from '../../../router/route-constants';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import {Save} from '@mui/icons-material';
+import {Save, Search} from '@mui/icons-material';
 import {ConditionError} from '../../../model/ConditionError';
 import {VotoApi} from '../../../services/voto-api';
 import {Voto} from '../../../model/Voto';
 import {Cooperado} from '../../../model/Cooperado';
 import {DefaultDialog} from '../../../componentes/DefaultDialog';
 import {StatusCoopVotoEnum} from '../../../model/enum/StatusCoopVotoEnum';
+import {useVotacaoTimer} from './VotacaoTimer';
+import {DateUtils} from '../../../utils/DateUtils';
+import {ShowContent} from '../../../componentes/ShowContent';
+import {StatusVotacaoEnum} from '../../../model/enum/StatusVotacaoEnum';
+import {LoadingRequest} from '../../../componentes/LoadingRequest';
 
 export const VotacaoVoto = (): React.JSX.Element => {
 
     //region Constants
 
-    const [validacaoCoop, setValidacaoCoop] = useState<ValidacaoCooperadoVoto>()
+    const messageError = 'Não foi possível localizar a votação selecionada.';
+
+    const [loadingRequest, setLoadingRequest] = useState<boolean>(false);
+    const [validacaoCoop, setValidacaoCoop] = useState<ValidacaoCooperadoVoto>();
     const [cooperado, setCooperado] = useState<Cooperado>(new Cooperado());
     const [loadingCpf, setLoadingCpf] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const [success, setSuccess] = useState<boolean>(false);
     const [votacao, setVotacao] = useState<Votacao>(new Votacao());
     const [fieldError, setFieldError] = useState<FieldError>({});
+    const [tick, setTick] = useState<number>(0);
     const [voto, setVoto] = useState<Voto>(new Voto());
     const navigate = useNavigate();
     const [error, setError] = useState<any>();
@@ -44,38 +53,27 @@ export const VotacaoVoto = (): React.JSX.Element => {
 
     //region Hooks
 
-    useEffect((): void => {
+    const {tempoRestante} = useVotacaoTimer({
+        dataInicio:      votacao.dataInicio,
+        duracaoSegundos: votacao.duracaoSegundos,
+    }, tick);
 
-    }, []);
+    const votacaoEncerrada: boolean = useMemo((): boolean => {
+        return (tempoRestante !== null && tempoRestante <= 0) || votacao?.status === StatusVotacaoEnum.ENCERRADA
+    }, [tempoRestante, votacao?.status]);
 
-    useEffect((): void => {
-        if (id) {
-            const _id: number = Number(id);
-            setLoadingCpf(true);
-            if (!isNaN(_id)) {
-                VotacaoApi.findById(_id).then((response: Votacao): void => {
-                    setLoadingCpf(false);
-                    setVotacao(response);
-                }).catch((error: any): void => {
-                    setLoadingCpf(false);
-                    setError(error);
-                });
-            }
-        } else {
-
-        }
-    }, [id]);
-
-    const bottomBar = useCallback((): React.JSX.Element => {
+    const bottomBar: () => React.JSX.Element = useCallback((): React.JSX.Element => {
         return (
             <>
-                <Button onClick={(): void => { window.location.reload() }}
+                <Button onClick={(): void => {
+                    window.location.reload()
+                }}
                         variant={'contained'}
                         color={'primary'}
                         autoFocus>
                     Novo Voto
                 </Button>
-                
+
                 <Button onClick={(): void => navigate(`${Routes.VOTACAO_PESQUISA.path}`)}
                         variant={'contained'}
                         color={'warning'}
@@ -85,7 +83,75 @@ export const VotacaoVoto = (): React.JSX.Element => {
             </>
         );
     }, [navigate]);
-    
+
+    const handleEndVote: () => void = useCallback((): void => {
+        setLoadingRequest(true);
+        VotacaoApi.endVote(votacao?.id).then((response: Votacao): void => {
+            setLoadingRequest(false);
+        }).catch((error: any): void => {
+            setLoadingRequest(false);
+            setError(error);
+        });
+    }, [votacao?.id]);
+
+    const validationCpf: () => void = useCallback((): void  => {
+        setLoadingCpf(true);
+        CooperadoApi.validatingVote(cooperado?.cpf || '').then((response: ValidacaoCooperadoVoto): void => {
+            setLoadingCpf(false);
+            setValidacaoCoop(response);
+
+            if (response.status === StatusCoopVotoEnum.ABLE_TO_VOTE) {
+                handleFindByCpf();
+            }
+
+        }).catch((error: any): void => {
+            setLoadingCpf(false);
+            setError(error);
+        });
+    }, [cooperado?.cpf]);
+
+    useEffect(() => {
+        const interval = setInterval((): void => {
+            setTick(t => t + 1);
+        }, 1000);
+
+        if (votacaoEncerrada) {
+            return (): void => clearInterval(interval);
+        }
+    }, [tempoRestante, votacaoEncerrada]);
+
+    useEffect((): void => {
+        if (id) {
+            const _id: number = Number(id);
+            if (!isNaN(_id)) {
+                setLoading(true);
+                VotacaoApi.findById(_id).then((response: Votacao): void => {
+                    setLoading(false);
+                    setVotacao(response);
+                }).catch((error: any): void => {
+                    setLoading(false);
+                    setError(error);
+                });
+            } else {
+                setError(messageError);
+            }
+        } else {
+            setError(messageError);
+        }
+    }, [id]);
+
+    useEffect((): void => {
+        if (error === messageError) {
+            setTimeout((): void => navigate(`${(Routes.VOTACAO_PESQUISA.path)}`), 3000);
+        }
+    }, [error, navigate]);
+
+    useEffect((): void => {
+        if (votacaoEncerrada && votacao?.status !== StatusVotacaoEnum.ENCERRADA) {
+            handleEndVote();
+        }
+    }, [handleEndVote, votacao?.status, votacaoEncerrada]);
+
     //endregion
 
     //region Handles
@@ -98,19 +164,7 @@ export const VotacaoVoto = (): React.JSX.Element => {
         const cpfValid: boolean = handleValidateCpf(cooperado?.cpf);
 
         if (cpfValid) {
-            setLoadingCpf(true);
-            CooperadoApi.validatingVote(cooperado?.cpf || '').then((response: ValidacaoCooperadoVoto): void => {
-                setLoadingCpf(false);
-                setValidacaoCoop(response);
-
-                if(response.status === StatusCoopVotoEnum.ABLE_TO_VOTE) {
-                    handleFindByCpf();
-                }
-
-            }).catch((error: any): void => {
-                setLoadingCpf(false);
-                setError(error);
-            });
+            validationCpf();
         }
     }
 
@@ -139,11 +193,6 @@ export const VotacaoVoto = (): React.JSX.Element => {
             setFieldError({...fieldError, cpfError: 'CPF inválido. Deve conter 11 dígitos.'});
             return false;
         }
-
-        // if (!verificaDigitosVerificadoresCPF(cpf)) {
-        //     setFieldError({...fieldError, cpfError: 'CPF inválido'});
-        //     return false;
-        // }
 
         setFieldError({...fieldError, cpfError: ''});
         return true;
@@ -196,6 +245,23 @@ export const VotacaoVoto = (): React.JSX.Element => {
 
             <Grid container spacing={2} justifyContent="center">
                 <Grid item xs={12}>
+                    <DefaultCard>
+                        <Grid item xs={12}>
+                            <ShowContent show={!votacaoEncerrada}>
+                                <Typography variant={'h2'} fontWeight={'bold'} color={'#7c2727'}>
+                                    A Votação termina em: {DateUtils.formatarTempo(tempoRestante)}
+                                </Typography>
+                            </ShowContent>
+                            <ShowContent show={votacaoEncerrada}>
+                                <Typography variant={'h2'} fontWeight={'bold'} color={'#7c2727'}>
+                                    A Votação encerrada!
+                                </Typography>
+                            </ShowContent>
+                        </Grid>
+                    </DefaultCard>
+                </Grid>
+
+                <Grid item xs={12}>
                     <DefaultCard title={'Dados da Pauta'}>
                         <Grid item xs={12}>
                             <TextField placeholder={`Informe o Nome da Pauta`}
@@ -226,6 +292,20 @@ export const VotacaoVoto = (): React.JSX.Element => {
 
                 <Grid item xs={12}>
                     <DefaultCard>
+                        <ShowContent show={!!cooperado?.nome}>
+                            <Grid item xs={12}>
+                                <TextField helperText={'Dado fictício gerado através da integração com a API 4Devs'}
+                                           value={cooperado?.nome || ''}
+                                           label="Nome do Cooperado"
+                                           variant="outlined"
+                                           disabled={true}
+                                           name="nome"
+                                           fullWidth
+                                           id="nome"
+                                           required/>
+                            </Grid>
+                        </ShowContent>
+
                         <Grid item xs={6}>
                             <TextField onBlur={async (): Promise<void> => handleBlurCpf()}
                                        placeholder={'Informe o CPF do Cooperado'}
@@ -234,8 +314,19 @@ export const VotacaoVoto = (): React.JSX.Element => {
                                        value={cooperado?.cpf || ''}
                                        InputProps={{
                                            inputComponent: MascaraCPF as any,
-                                           endAdornment:   loadingCpf && <CircularProgress size={20}/>
+                                           endAdornment:   (
+                                                               <InputAdornment position="end">
+                                                                   {loadingCpf ? (
+                                                                       <CircularProgress size={20}/>
+                                                                   ) : (
+                                                                       <IconButton onClick={handleBlurCpf} edge="end" disabled={votacaoEncerrada}>
+                                                                           <Search/>
+                                                                       </IconButton>
+                                                                   )}
+                                                               </InputAdornment>
+                                                           )
                                        }}
+                                       disabled={votacaoEncerrada}
                                        label={`CPF do Cooperado`}
                                        onChange={handleValidCpf}
                                        variant="outlined"
@@ -246,16 +337,15 @@ export const VotacaoVoto = (): React.JSX.Element => {
                         </Grid>
 
                         <Grid item xs={6}>
-                            <TextField
-                                placeholder={'Informe a decisão sobre a pauta'}
-                                label="Deseja Aprovar a Pauta em Votação?"
-                                value={voto?.decisao || ''}
-                                onChange={handleChange}
-                                variant={'outlined'}
-                                name={'decisao'}
-                                fullWidth
-                                select
-                            >
+                            <TextField disabled={votacaoEncerrada || validacaoCoop?.status !== StatusCoopVotoEnum.ABLE_TO_VOTE}
+                                       placeholder={'Informe a decisão sobre a pauta'}
+                                       label="Deseja Aprovar a Pauta em Votação?"
+                                       value={voto?.decisao || ''}
+                                       onChange={handleChange}
+                                       variant={'outlined'}
+                                       name={'decisao'}
+                                       fullWidth
+                                       select>
                                 {VotoEnum.getOptions().map(({label, value}: OptionItem<VotoEnum>, index: number): any =>
                                     (
                                         <MenuItem value={value} key={`option-${index?.toString()}`}>{label}</MenuItem>
@@ -280,9 +370,9 @@ export const VotacaoVoto = (): React.JSX.Element => {
                         </Button>
 
                         <Button startIcon={loading ? <CircularProgress size={20}/> : <Save/>}
+                                disabled={loading || votacaoEncerrada}
                                 variant={'contained'}
                                 onClick={handleSave}
-                                disabled={loading}
                                 color={'primary'}>
                             Salvar
                         </Button>
@@ -327,6 +417,8 @@ export const VotacaoVoto = (): React.JSX.Element => {
                     title={'Sucesso'}
                     open={success}
                 />
+
+                <LoadingRequest loading={loadingRequest}/>
 
                 <ErrorNotification error={error} onClose={(): void => setError(undefined)}/>
             </React.Fragment>

@@ -1,5 +1,10 @@
 package com.votacao.core.utils;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
+import static java.time.ZoneOffset.UTC;
+
 public class TimeUtils {
 
     public static final String TIME_VALID_REGEX = "\\d{1,5}:\\d{2}:\\d{2}";
@@ -28,4 +33,18 @@ public class TimeUtils {
 
         return horas * 3600 + minutos * 60 + segundos;
     }
+
+    public static Long calcularTempoRestanteEmSegundos(LocalDateTime dataInicio, Long duracaoSegundos) {
+        if (dataInicio == null || duracaoSegundos == null) {
+            return null;
+        }
+
+        long inicioEpoch = dataInicio.toEpochSecond(UTC);
+        long fimEpoch = inicioEpoch + duracaoSegundos;
+
+        long agoraEpoch = LocalDateTime.now().toEpochSecond(UTC);
+
+        return Math.max(fimEpoch - agoraEpoch, 0);
+    }
+
 }

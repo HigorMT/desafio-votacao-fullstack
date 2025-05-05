@@ -10,6 +10,7 @@ export class Votacao {
     dataCriacao?: Date;
     dataAtualizacao?: Date
     duracaoVotacao?: string;
+    duracaoSegundos?: number;
     status?: StatusVotacaoEnum;
 
 }

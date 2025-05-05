@@ -2,6 +2,7 @@ import React from 'react';
 import {Box, Button, Grid, Typography} from '@mui/material';
 import {useNavigate} from 'react-router-dom';
 import {Routes} from '../../router/route-constants';
+import {Home} from '@mui/icons-material';
 
 export const NoRoutePage = (): React.JSX.Element => {
 
@@ -10,7 +11,7 @@ export const NoRoutePage = (): React.JSX.Element => {
     return (
         <Box
             sx={{
-                height:             '100vh',
+                height:             '89vh',
                 backgroundImage:    'url(https://static.vecteezy.com/ti/vetor-gratis/p1/20272064-psd-404-pagina-nao-encontrado-erro-3d-renderizacao-icone-ilustracao-vetor.jpg)',
                 backgroundSize:     'cover',
                 backgroundPosition: 'center',
@@ -25,7 +26,7 @@ export const NoRoutePage = (): React.JSX.Element => {
         >
             <Grid container spacing={2}>
                 <Grid item xs={12}>
-                    <Typography variant="h4" component="h1">
+                    <Typography variant="h4" component="h1" color={'black'}>
                         Ooops, parece que acessou uma rota inexistente.
                     </Typography>
                 </Grid>
@@ -34,7 +35,7 @@ export const NoRoutePage = (): React.JSX.Element => {
                         onClick={(): void => navigate(`${Routes.HOME.path}`)}
                         color={'primary'} autoFocus
                         variant={'contained'}
-                    >
+                        startIcon={<Home/>}>
                         Home
                     </Button>
                 </Grid>

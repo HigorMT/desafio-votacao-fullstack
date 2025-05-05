@@ -18,6 +18,7 @@ import {ErrorNotification} from '../../../componentes/ErrorNotification';
 export const PautaCadastro = (): React.JSX.Element => {
 
     //region Constants
+    const messageError = 'Não foi possível localizar a Pauta selecionada.';
 
     const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -45,8 +46,8 @@ export const PautaCadastro = (): React.JSX.Element => {
     useEffect((): void => {
         if (id) {
             const _id: number = Number(id);
-            setLoading(true);
             if (!isNaN(_id)) {
+                setLoading(true);
                 PautaApi.findById(_id).then((response: Pauta): void => {
                     setLoading(false);
                     setPauta(response);
@@ -54,9 +55,17 @@ export const PautaCadastro = (): React.JSX.Element => {
                     setLoading(false);
                     setError(error);
                 });
+            } else {
+                setError(messageError);
             }
         }
     }, [id]);
+
+    useEffect((): void => {
+        if (error === messageError) {
+            setTimeout((): void => navigate(`${(Routes.PAUTA_PESQUISA.path)}`), 3000);
+        }
+    }, [error, navigate]);
 
     //endregion
 

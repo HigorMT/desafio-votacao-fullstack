@@ -1,6 +1,7 @@
 package com.votacao.domain.service;
 
 import com.votacao.api.dto.voto.ContabilizacaoVoto;
+import com.votacao.core.utils.TimeUtils;
 import com.votacao.domain.entity.Pauta;
 import com.votacao.domain.entity.Votacao;
 import com.votacao.domain.enums.StatusPautaEnum;
@@ -55,6 +56,20 @@ public class VotacaoService {
         }
 
         entity.setPauta(pautaVinculada);
+    }
+
+    public Votacao findAndVerify(Long id) {
+        Votacao votacao = findById(id);
+
+        if (EM_VOTACAO.equals(votacao.getStatus())) {
+            Long tempoRestante = TimeUtils.calcularTempoRestanteEmSegundos(votacao.getDataInicio(), votacao.getDuracaoSegundos());
+
+            if (tempoRestante <= 0) {
+                return endVoting(id);
+            }
+        }
+
+        return votacao;
     }
 
     @Transactional
@@ -127,14 +142,14 @@ public class VotacaoService {
         ContabilizacaoVoto resultado = votoService.countVote(votacao.getId());
         Long votosTotais = resultado.getVotosTotais();
 
-        if (votosTotais == 0) {
-            throw new BusinessException("Não é possível calcular o percentual com zero votos.");
-        }
-
-        double percentualFavoravel = (resultado.getVotosFavoraveis() * 100.0) / votosTotais;
-
         Pauta pauta = votacao.getPauta();
-        pauta.setStatus(percentualFavoravel > 51.0 ? APROVADA : REJEITADA);
+
+        if (votosTotais == 0) {
+            pauta.setStatus(REJEITADA);
+        } else {
+            double percentualFavoravel = (resultado.getVotosFavoraveis() * 100.0) / votosTotais;
+            pauta.setStatus(percentualFavoravel > 51.0 ? APROVADA : REJEITADA);
+        }
 
         pautaService.save(pauta);
     }

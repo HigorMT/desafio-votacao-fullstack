@@ -65,7 +65,7 @@ public class VotacaoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<VotacaoResponse> findById(@PathVariable("id") Long id) {
-        Votacao entity = service.findById(id);
+        Votacao entity = service.findAndVerify(id);
         return ResponseEntity.ok(mapper.toResponse(entity));
     }
 

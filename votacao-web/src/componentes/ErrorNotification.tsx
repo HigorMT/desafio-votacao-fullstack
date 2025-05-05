@@ -16,7 +16,7 @@ export const ErrorNotification = ({error, onClose}: ErrorNotificationProps): Rea
 
     //region Hooks
     const handleError = useCallback((err: any): void => {
-        if (err !== undefined && Object.keys(err).length > 0) {
+        if (typeof(err) !== 'string' && err !== undefined && Object.keys(err).length > 0) {
             if (err?.response?.data?.detail && err?.response?.data?.detail?.length > 0) {
                 const details: string = err.response.data.detail
                 let message: string = `Erros Encontrados: ${details}`;
@@ -27,6 +27,8 @@ export const ErrorNotification = ({error, onClose}: ErrorNotificationProps): Rea
             } else {
                 setErro('Falha na comunicação com o servidor.');
             }
+        } else if (typeof(err) === 'string' && err?.length > 0) {
+            setErro(err);
         } else {
             setErro('');
         }

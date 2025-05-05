@@ -64,7 +64,7 @@ public class CooperadoService {
     }
 
     public ValidacaoCooperadoVoto validateToVote(String cpf) {
-        Boolean cpfValido = facade.verificaDigitosVerificadoresCPF(cpf);
+        boolean cpfValido = facade.verificaDigitosVerificadoresCPF(cpf);
 
         if (!cpfValido) {
             throw new DataNotFoundException("CPF inválido.");

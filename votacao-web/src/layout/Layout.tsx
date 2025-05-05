@@ -18,7 +18,7 @@ const Main = styled('main', {shouldForwardProp: (prop) => prop !== 'open'})<{
 }>(({theme, open}) => ({
     flexGrow:   1,
     padding:    theme.spacing(2),
-    marginTop:  '150px',
+    marginTop:  '60px',
     transition: theme.transitions.create('margin', {
         easing:   theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen
@@ -83,6 +83,14 @@ export const Layout = ({children}: LayoutProps): React.JSX.Element => {
                 <AppBar position="fixed" open={open}>
                     {/*<HeaderBar/>*/}
                     <Toolbar>
+                        <IconButton onClick={handleDrawerOpen}
+                                    aria-label="open drawer"
+                                    sx={{mr: 2, ml: 2}}
+                                    color="inherit"
+                                    edge="start" >
+                            <MenuIcon/>
+                        </IconButton>
+
                         <Typography letterSpacing={0.15}
                                     id={'HEADER_NAME'}
                                     fontWeight={500}
@@ -93,14 +101,6 @@ export const Layout = ({children}: LayoutProps): React.JSX.Element => {
                                     noWrap>
                             {routerName(Routes)}
                         </Typography>
-
-                        <IconButton onClick={handleDrawerOpen}
-                                    aria-label="open drawer"
-                                    color="inherit"
-                                    edge="start"
-                                    sx={{mr: 2}}>
-                            <MenuIcon/>
-                        </IconButton>
                     </Toolbar>
                 </AppBar>
                 <Main open={open}>{children}</Main>

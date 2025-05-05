@@ -1,7 +1,7 @@
 import {CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from '@mui/material';
 import {useTheme} from '@mui/material/styles';
 import React from 'react';
-import {useMediaQuery} from '@mui/system';
+import {Theme, useMediaQuery} from '@mui/system';
 import {ShowContent} from './ShowContent';
 
 interface DefaultDialogProps {
@@ -24,11 +24,30 @@ export const DefaultDialog = ({
                                   children,
                                   onClose
                               }: DefaultDialogProps) => {
-    const theme = useTheme();
+    const theme: Theme = useTheme();
     const fullScreen: boolean = useMediaQuery(theme.breakpoints.down('md'));
 
+    const dialogProps = {
+        '& .MuiDialog-paper': {
+            width: {
+                xs: '95vw',
+                sm: '90vw',
+                md: '80vw',
+                lg: '70vw',
+                xl: '60vw'
+            },
+            maxWidth: '1500px'
+        }
+    }
+
     return (
-        <Dialog fullWidth fullScreen={fullScreen} open={open} onClose={() => onClose?.(false)} aria-labelledby="responsive-dialog-title">
+        <Dialog onClose={() => onClose?.(false)}
+                aria-describedby="alert-dialog-description"
+                aria-labelledby="alert-dialog-title"
+                fullScreen={fullScreen}
+                sx={dialogProps}
+                open={open}
+                fullWidth>
 
             <ShowContent show={!!title}>
                 <DialogTitle id="responsive-dialog-title">
@@ -36,7 +55,7 @@ export const DefaultDialog = ({
                 </DialogTitle>
             </ShowContent>
 
-            <DialogContent style={{padding: '20px'}}>
+            <DialogContent>
                 <ShowContent show={!!message}>
                     <DialogContentText>
                         {message}
@@ -44,8 +63,7 @@ export const DefaultDialog = ({
                 </ShowContent>
 
                 <ShowContent show={loading}>
-                    <div
-                        style={{
+                    <div style={{
                             justifyContent: 'center',
                             alignItems:     'center',
                             overflow:       'hidden',
@@ -58,7 +76,15 @@ export const DefaultDialog = ({
                 </ShowContent>
 
                 <ShowContent show={!loading}>
-                    {children}
+                    <div style={{
+                        justifyContent: 'flex-start',
+                        alignItems:     'center',
+                        overflow:       'hidden',
+                        height:         '100%',
+                        display:        'flex',
+                    }}>
+                        {children}
+                    </div>
                 </ShowContent>
             </DialogContent>
 

@@ -1,7 +1,7 @@
 import {ContainerLayout} from '../../../layout/ContainerLayout';
 import {Box, Button, Grid, IconButton, Pagination, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip} from '@mui/material';
 import {DefaultCard} from '../../../componentes/DefaultCard';
-import {Edit, HighlightOff, HowToVote} from '@mui/icons-material';
+import {Edit, EventAvailable, HighlightOff, HowToVote} from '@mui/icons-material';
 import {StatusPautaEnum} from '../../../model/enum/StatusPautaEnum';
 import React, {useEffect, useMemo, useState} from 'react';
 import {Page} from '../../../model/page';
@@ -38,6 +38,7 @@ export const PautaPesquisa = (): React.JSX.Element => {
     useEffect((): void => {
         handlePageable();
     }, []);
+
     //endregion
 
     //region Handles
@@ -52,7 +53,6 @@ export const PautaPesquisa = (): React.JSX.Element => {
 
     const handlePageable = (params?: any): void => {
         const filtro: any = params ?? mountParams(0);
-
         setLoading(true);
         PautaApi.pageable(filtro).then((response: Page<Pauta>): void => {
             setLoading(false);
@@ -83,82 +83,95 @@ export const PautaPesquisa = (): React.JSX.Element => {
         VotacaoApi.createVote(id).then((response: Votacao): void => {
             setMessage('Votação Criada com sucesso.');
             setLoadingRequest(false);
+            handlePageable(currentPage);
+
         }).catch((error: any): void => {
             setLoadingRequest(false);
             setError(error);
         })
     }
+
     //endregion
 
     return (
         <ContainerLayout>
             <Grid container spacing={2} justifyContent="center">
                 <Grid item xs={12}>
-                    <DefaultCard style={{height: 'calc(100vh - 360px)'}}>
-                        <TableContainer component={Paper} style={{margin: '20px'}}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>ID</TableCell>
-                                        <TableCell>Nome</TableCell>
-                                        <TableCell>Duração</TableCell>
-                                        <TableCell>Descrição</TableCell>
-                                        <TableCell>Data de Criação</TableCell>
-                                        <TableCell>Data de Atualização</TableCell>
-                                        <TableCell>Status</TableCell>
-                                        <TableCell align="center">Ações</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    <DefaultContent loading={loading}>
-                                        <ShowContent show={pautas?.length > 0}>
-                                            {pautas.map((pauta: Pauta): React.JSX.Element => (
-                                                <TableRow key={pauta?.id}>
-                                                    <TableCell>{pauta.id}</TableCell>
-                                                    <TableCell>{pauta.nome}</TableCell>
-                                                    <TableCell>{pauta.duracao}</TableCell>
-                                                    <TableCell>{pauta.descricao}</TableCell>
-                                                    <TableCell>{pauta.dataCriacao?.toLocaleString()}</TableCell>
-                                                    <TableCell>{pauta.dataAtualizacao?.toLocaleString()}</TableCell>
-                                                    <TableCell>{StatusPautaEnum.getDescricao(pauta.status!)}</TableCell>
-                                                    <TableCell align="center">
-                                                        <Tooltip title={'Editar Pauta'}>
-                                                            <IconButton color="primary" onClick={(): void => handleEdit(pauta?.id)}>
-                                                                <Edit/>
-                                                            </IconButton>
-                                                        </Tooltip>
-
-                                                        <ShowContent show={pauta.status === StatusPautaEnum.NOVA}>
-                                                            <Tooltip title={'Criar Votação'}>
-                                                                <IconButton sx={{color: 'green'}} disabled={loadingRequest} onClick={(): void => handleCreateVote(pauta?.id)}>
-                                                                    <HowToVote/>
+                    <DefaultCard style={{height: 'calc(100vh - 360px)', minHeight: '530px'}}>
+                        <Grid item xs={12} style={{justifyContent: 'right', display: 'flex'}}>
+                            <Button onClick={(): void => navigate(`${Routes.PAUTA_CADASTRO.path}`)}
+                                    startIcon={<EventAvailable/>}
+                                    variant={'contained'}
+                                    color={'success'}>
+                                Cadastrar
+                            </Button>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TableContainer component={Paper}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell align="center">ID</TableCell>
+                                            <TableCell align="center">Nome</TableCell>
+                                            <TableCell align="center">Duração</TableCell>
+                                            <TableCell align="center">Descrição</TableCell>
+                                            <TableCell align="center">Data de Criação</TableCell>
+                                            <TableCell align="center">Data de Atualização</TableCell>
+                                            <TableCell align="center">Status</TableCell>
+                                            <TableCell align="center">Ações</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        <DefaultContent loading={loading}>
+                                            <ShowContent show={pautas?.length > 0}>
+                                                {pautas.map((pauta: Pauta): React.JSX.Element => (
+                                                    <TableRow key={pauta?.id}>
+                                                        <TableCell>{pauta.id}</TableCell>
+                                                        <TableCell>{pauta.nome}</TableCell>
+                                                        <TableCell>{pauta.duracao}</TableCell>
+                                                        <TableCell>{pauta.descricao}</TableCell>
+                                                        <TableCell>{pauta.dataCriacao?.toLocaleString()}</TableCell>
+                                                        <TableCell>{pauta.dataAtualizacao?.toLocaleString()}</TableCell>
+                                                        <TableCell>{StatusPautaEnum.getDescricao(pauta.status!)}</TableCell>
+                                                        <TableCell align="center">
+                                                            <Tooltip title={'Editar Pauta'}>
+                                                                <IconButton color="primary" onClick={(): void => handleEdit(pauta?.id)}>
+                                                                    <Edit/>
                                                                 </IconButton>
                                                             </Tooltip>
-                                                        </ShowContent>
+
+                                                            <ShowContent show={pauta.status === StatusPautaEnum.NOVA}>
+                                                                <Tooltip title={'Criar Votação'}>
+                                                                    <IconButton sx={{color: 'green'}} disabled={loadingRequest} onClick={(): void => handleCreateVote(pauta?.id)}>
+                                                                        <HowToVote/>
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            </ShowContent>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </ShowContent>
+
+                                            <ShowContent show={pautas?.length === 0}>
+                                                <TableRow key={'no-data-pauta'}>
+                                                    <TableCell colSpan={8} style={{textAlign: 'center'}}>
+                                                        Nenhuma Pauta registrada no sistema.
                                                     </TableCell>
                                                 </TableRow>
-                                            ))}
-                                        </ShowContent>
-
-                                        <ShowContent show={pautas?.length === 0}>
-                                            <TableRow key={'no-data-pauta'}>
-                                                <TableCell colSpan={8} style={{textAlign: 'center'}}>
-                                                    Nenhuma Pauta registrada no sistema.
-                                                </TableCell>
-                                            </TableRow>
-                                        </ShowContent>
-                                    </DefaultContent>
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                        <Box sx={{display: 'flex', justifyContent: 'center', width: '100%', marginTop: '15px'}}>
-                            <Pagination
-                                onChange={(e, page: number) => handleChangePage(page)}
-                                count={pagePautas?.totalPages || 1}
-                                page={currentPage}
-                                color="primary"
-                            />
-                        </Box>
+                                            </ShowContent>
+                                        </DefaultContent>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                            <Box sx={{display: 'flex', justifyContent: 'center', width: '100%', marginTop: '15px'}}>
+                                <Pagination
+                                    onChange={(e, page: number) => handleChangePage(page)}
+                                    count={pagePautas?.totalPages || 1}
+                                    page={currentPage}
+                                    color="primary"
+                                />
+                            </Box>
+                        </Grid>
                     </DefaultCard>
                 </Grid>
             </Grid>

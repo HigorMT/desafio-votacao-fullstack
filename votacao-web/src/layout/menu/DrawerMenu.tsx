@@ -35,7 +35,7 @@ export const DrawerMenu = ({handleDrawerClose, children, open}: DrawerMenuProps)
         <Drawer style={{height: '100vh', position: 'relative'}}
                 sx={{'& .MuiPaper-root': {borderRadius: 0}}}
                 onClose={toggleDrawer}
-                anchor="right"
+                anchor="left"
                 open={open}>
             <div style={{borderRadius: 0}}>
                 <DrawerHeader>

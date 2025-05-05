@@ -53,6 +53,9 @@ public class Votacao {
     @Convert(converter = DurationConverter.class)
     private String duracaoVotacao;
 
+    @Column(name = "duracao_votacao", updatable = false, insertable = false)
+    private Long duracaoSegundos;
+
     @Column(name = "data_criacao", updatable = false)
     private LocalDateTime dataCriacao;
 

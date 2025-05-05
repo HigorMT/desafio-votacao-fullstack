@@ -20,6 +20,7 @@ public class VotacaoResponse {
 
     private Long id;
     private Pauta pauta;
+    private Long duracaoSegundos;
     private String duracaoVotacao;
     private StatusVotacaoEnum status;
 
@@ -29,10 +30,8 @@ public class VotacaoResponse {
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime dataAtualizacao;
 
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime dataInicio;
 
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime dataFim;
 
 }
